@@ -1,10 +1,6 @@
 package fr.lespoulpes.backup.incremental;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 
 public class Incremental {
 
@@ -19,6 +15,7 @@ public class Incremental {
 		options.addOption("source", true, "Base source directory");
 		options.addOption("destination", true, "Destination directory for the backup");
 		options.addOption("hashAlgorithm", true, "Hash algorithm used to validate checksum");
+        options.addOption("compressionLevel", true, "Compression level for incremental archive (0-9 : 0 (NO_COMPRESSION) to 9 (BEST_COMPRESSION))");
 		CommandLine cmd = parser.parse(options, args);
 		
 		if(!cmd.hasOption("backup") && !cmd.hasOption("restore")) {

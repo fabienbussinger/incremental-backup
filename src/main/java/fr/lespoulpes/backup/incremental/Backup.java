@@ -1,13 +1,5 @@
 package fr.lespoulpes.backup.incremental;
 
-import java.io.File;
-import java.util.Optional;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import fr.lespoulpes.backup.incremental.file.RegistryFilenameUtils;
 import fr.lespoulpes.backup.incremental.file.diff.DiffProcessing;
 import fr.lespoulpes.backup.incremental.file.diff.serder.CSVRegistryDiffDeserializer;
@@ -17,6 +9,13 @@ import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.DiffRegistr
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryToRegistryAdapter;
 import fr.lespoulpes.backup.incremental.registry.RegistryBuilder.Registry;
 import fr.lespoulpes.backup.incremental.tree.Node;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.util.Optional;
 
 public class Backup implements IncrementalExecution {
 	private static final Logger LOG = LogManager.getLogger(Backup.class);
@@ -26,8 +25,22 @@ public class Backup implements IncrementalExecution {
 		this.cmd = cmd;
 	}
 
+	private static void tracePath(Node root) {
+		LOG.debug("{} \t\t\t\t{}", root.getNode().getAbsolutePath(), root.getHash());
+		root.getChildren().forEach(Backup::tracePath);
+	}
+
+	private static long traceTotalSize(Node root) {
+		long sum = root.getSize();
+		for (Node child : root.getChildren()) {
+			sum += traceTotalSize(child);
+		}
+		return sum;
+	}
+
 	@Override
 	public void execute() {
+		final int compressionLevel = Integer.parseInt(cmd.getOptionValue("compressionLevel", "0"));
 		File source = new File(cmd.getOptionValue("source"));
 		File destination = new File(cmd.getOptionValue("destination"));
 		if (destination.exists() && !destination.isDirectory()) {
@@ -58,19 +71,6 @@ public class Backup implements IncrementalExecution {
 				: Registry.EMPTY;
 
 		DiffRegistry registryDiff = DiffRegistry.fromTwoRegistry().older(older).newer(current).build();
-		new DiffProcessing(destination).process(registryDiff);
-	}
-
-	private static long traceTotalSize(Node root) {
-		long sum = root.getSize();
-		for (Node child : root.getChildren()) {
-			sum += traceTotalSize(child);
-		}
-		return sum;
-	}
-
-	private static void tracePath(Node root) {
-		System.out.println(root.getNode().getAbsolutePath() + "\t\t\t\t" + root.getHash());
-		root.getChildren().forEach(Backup::tracePath);
+		new DiffProcessing(compressionLevel, destination).process(registryDiff);
 	}
 }

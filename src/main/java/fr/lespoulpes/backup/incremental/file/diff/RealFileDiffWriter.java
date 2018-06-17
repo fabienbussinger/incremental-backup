@@ -1,34 +1,35 @@
 package fr.lespoulpes.backup.incremental.file.diff;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import org.apache.commons.io.IOUtils;
-
 import fr.lespoulpes.backup.incremental.Constants;
 import fr.lespoulpes.backup.incremental.file.RegistryFilenameUtils;
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.Diff;
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.DiffRegistry;
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryEntry;
+import org.apache.commons.io.IOUtils;
+
+import java.io.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class RealFileDiffWriter {
+    private final int compressionLevel;
 	private final File destination;
 
-	public RealFileDiffWriter(File destination) {
-		this.destination = destination;
-	}
+    public RealFileDiffWriter(int compressionLevel, File destination) {
+        this.compressionLevel = compressionLevel;
+        this.destination = destination;
+    }
+
+    public RealFileDiffWriter(File destination) {
+        this(0, destination);
+    }
 
 	public void write(DiffRegistry registry) {
 		String contentFileName = this.destination.getAbsolutePath() + File.separator
 				+ RegistryFilenameUtils.toFilenamePrefix(registry) + ".zip";
 		File sourceDir = new File(registry.getSourceDir());
 		try (ZipOutputStream zof = new ZipOutputStream(new FileOutputStream(contentFileName))) {
-			zof.setLevel(0);
+            zof.setLevel(compressionLevel);
 			for (Diff aDiffType : Diff.values()) {
 				for (DiffRegistryEntry entry : registry.get(aDiffType)) {
 					if (!entry.getHash().equals(Constants.DIRECTORY_HASH) && !(entry.getDiff() == Diff.DELETED || entry.getDiff() == Diff.EQUAL)) {

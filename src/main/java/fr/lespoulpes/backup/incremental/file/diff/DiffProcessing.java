@@ -1,20 +1,21 @@
 package fr.lespoulpes.backup.incremental.file.diff;
 
-import java.io.File;
-
 import fr.lespoulpes.backup.incremental.file.diff.serder.CSVRegistryDiffSerializer;
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.DiffRegistry;
 
+import java.io.File;
+
 public class DiffProcessing {
-	private final File destination;
+    private final CSVRegistryDiffSerializer csvRegistryDiffSerializer;
+    private final RealFileDiffWriter realFileDiffWriter;
 
-	public DiffProcessing(File destination) {
-		this.destination = destination;
-	}
+    public DiffProcessing(int compressionLevel, File destination) {
+        this.csvRegistryDiffSerializer = new CSVRegistryDiffSerializer(destination);
+        this.realFileDiffWriter = new RealFileDiffWriter(compressionLevel, destination);
+    }
 
-	public void process(DiffRegistry registry) {
-		new CSVRegistryDiffSerializer(this.destination).serialize(registry);
-		new RealFileDiffWriter(this.destination).write(registry);
-		
-	}
+    public void process(DiffRegistry registry) {
+        this.csvRegistryDiffSerializer.serialize(registry);
+        this.realFileDiffWriter.write(registry);
+    }
 }
