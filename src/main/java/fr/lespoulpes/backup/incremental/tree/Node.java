@@ -1,21 +1,22 @@
 package fr.lespoulpes.backup.incremental.tree;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
-	private final File node;
+    private final Path node;
 	private final String hash;
 	private final long size;
 	private final List<Node> children = new ArrayList<Node>();
-	public Node(File node, String hash, final long size) {
+
+    public Node(Path node, String hash, final long size) {
 		this.node = node;
 		this.hash = hash;
 		this.size = size;
 	}
-	
-	public File getNode() {
+
+    public Path getNode() {
 		return node;
 	}
 	public String getHash() {

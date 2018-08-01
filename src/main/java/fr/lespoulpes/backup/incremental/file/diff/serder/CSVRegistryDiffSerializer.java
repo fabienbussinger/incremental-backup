@@ -1,16 +1,12 @@
 package fr.lespoulpes.backup.incremental.file.diff.serder;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-
 import fr.lespoulpes.backup.incremental.file.RegistryFilenameUtils;
 import fr.lespoulpes.backup.incremental.file.serder.Serializer;
-import fr.lespoulpes.backup.incremental.registry.DiffRegistryEntry;
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.Diff;
 import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.DiffRegistry;
+import fr.lespoulpes.backup.incremental.registry.DiffRegistryEntry;
+
+import java.io.*;
 
 public class CSVRegistryDiffSerializer implements Serializer<DiffRegistry> {
 	private final File destination;
@@ -28,7 +24,7 @@ public class CSVRegistryDiffSerializer implements Serializer<DiffRegistry> {
 			bw.newLine();
 			for (Diff diff : Diff.values()) {
 				for (DiffRegistryEntry node : registry.get(diff)) {
-					bw.write(line(node));
+					bw.write(line(registry, node));
 					bw.newLine();
 				}
 			}
@@ -41,7 +37,7 @@ public class CSVRegistryDiffSerializer implements Serializer<DiffRegistry> {
 		}
 	}
 
-	private String line(DiffRegistryEntry re) {
-		return String.format("%s;%s;%s;%s", re.getDiff(), re.getHash(), re.getPath(), re.getSize());
+	private String line(DiffRegistry registry, DiffRegistryEntry re) {
+		return String.format("%s;%s;%s;%s", re.getDiff(), re.getHash(), registry.getSourceDir().relativize(re.getPath()).normalize(), re.getSize());
 	}
 }

@@ -1,15 +1,12 @@
 package fr.lespoulpes.backup.incremental.file.registry.serder;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-
 import fr.lespoulpes.backup.incremental.file.serder.Deserializer;
 import fr.lespoulpes.backup.incremental.registry.RegistryBuilder;
 import fr.lespoulpes.backup.incremental.registry.RegistryBuilder.Registry;
 import fr.lespoulpes.backup.incremental.registry.RegistryEntry;
+
+import java.io.*;
+import java.nio.file.Paths;
 
 public class CSVRegistryDeserializer implements Deserializer<Registry> {
 	private final File file;
@@ -22,12 +19,12 @@ public class CSVRegistryDeserializer implements Deserializer<Registry> {
 	public Registry deserialize() {
 		try (final BufferedReader br = new BufferedReader(new FileReader(this.file))) {
 			String[] headers = br.readLine().split(";");
-			RegistryBuilder builder = Registry.builder().sourceDir(headers[0]).timestamp(Long.parseLong(headers[1]))
+			RegistryBuilder builder = Registry.builder().sourceDir(Paths.get(headers[0])).timestamp(Long.parseLong(headers[1]))
 					.hashAlgorithm(headers[2]);
 			String line = null;
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(";");
-				builder.entry(new RegistryEntry(values[0], values[1], Long.parseLong(values[2])));
+				builder.entry(new RegistryEntry(values[0], Paths.get(headers[0], values[1]), Long.parseLong(values[2])));
 			}
 			return builder.build();
 		} catch (FileNotFoundException e) {

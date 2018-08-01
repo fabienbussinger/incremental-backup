@@ -7,20 +7,21 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.file.Path;
 import java.util.*;
 
 public class DiffRegistryBuilder {
     private static final Logger LOG = LogManager.getLogger(DiffRegistryBuilder.class);
 
-    private IRegistry<String, RegistryEntry> older = Registry.EMPTY;
-    private IRegistry<String, RegistryEntry> newer;
+    private IRegistry<Path, RegistryEntry> older = Registry.EMPTY;
+    private IRegistry<Path, RegistryEntry> newer;
 
-    public DiffRegistryBuilder older(IRegistry<String, RegistryEntry> older) {
+    public DiffRegistryBuilder older(IRegistry<Path, RegistryEntry> older) {
         this.older = older;
         return this;
     }
 
-    public DiffRegistryBuilder newer(IRegistry<String, RegistryEntry> newer) {
+    public DiffRegistryBuilder newer(IRegistry<Path, RegistryEntry> newer) {
         this.newer = newer;
         return this;
     }
@@ -36,11 +37,11 @@ public class DiffRegistryBuilder {
 
         DiffRegistry registryDiff = new DiffRegistry(newer.getSourceDir(), System.currentTimeMillis(),
                 this.older == Registry.EMPTY ? this.newer.getHashAlgorithm() : this.older.getHashAlgorithm());
-        Set<String> both = older.getKeys();
+        Set<Path> both = older.getKeys();
         both.retainAll(newer.getKeys());
-        LOG.debug("Existing files in both registry : {}", () -> Arrays.toString(both.toArray(new String[0])));
+        LOG.debug("Existing files in both registry : {}", () -> Arrays.toString(both.toArray(new Path[0])));
 
-        for (String supposedIdentical : both) {
+        for (Path supposedIdentical : both) {
             RegistryEntry old = older.get(supposedIdentical);
             RegistryEntry newe = newer.get(supposedIdentical);
             if (old.getHash().equals(newe.getHash())) {
@@ -54,19 +55,19 @@ public class DiffRegistryBuilder {
             }
         }
 
-        Set<String> deleted = older.getKeys();
+        Set<Path> deleted = older.getKeys();
         deleted.removeAll(newer.getKeys());
-        LOG.debug("Deleted file from old registry : {}", () -> Arrays.toString(deleted.toArray(new String[0])));
+        LOG.debug("Deleted file from old registry : {}", () -> Arrays.toString(deleted.toArray(new Path[0])));
 
-        for (String del : deleted) {
+        for (Path del : deleted) {
             registryDiff.add(Diff.DELETED, older.get(del));
         }
 
-        Set<String> added = newer.getKeys();
+        Set<Path> added = newer.getKeys();
         added.removeAll(older.getKeys());
-        LOG.debug("Added files in new registry : {}", () -> Arrays.toString(added.toArray(new String[0])));
+        LOG.debug("Added files in new registry : {}", () -> Arrays.toString(added.toArray(new Path[0])));
 
-        for (String add : added) {
+        for (Path add : added) {
             registryDiff.add(Diff.ADDED, newer.get(add));
         }
 
@@ -81,13 +82,13 @@ public class DiffRegistryBuilder {
         private DiffRegistry registryDiff;
         private String hashAlgorithm;
         private long timestamp;
-        private String sourceDir;
+        private Path sourceDir;
 
         private RegistryDiffByLineBuilder() {
 
         }
 
-        public RegistryDiffByLineBuilder sourceDir(String sourceDir) {
+        public RegistryDiffByLineBuilder sourceDir(Path sourceDir) {
             this.sourceDir = sourceDir;
             return this;
         }
@@ -102,7 +103,7 @@ public class DiffRegistryBuilder {
             return this;
         }
 
-        public RegistryDiffByLineBuilder add(Diff diff, String hash, String path, long size) {
+        public RegistryDiffByLineBuilder add(Diff diff, String hash, Path path, long size) {
             this.registryDiff = registryDiff == null
                     ? new DiffRegistry(this.sourceDir, this.timestamp, this.hashAlgorithm)
                     : this.registryDiff;
@@ -116,12 +117,12 @@ public class DiffRegistryBuilder {
     }
 
     public static final class DiffRegistry implements IRegistry<Diff, List<DiffRegistryEntry>> {
-        private final String sourceDir;
+        private final Path sourceDir;
         private final long timestamp;
         private final String hashAlgorithm;
         private final Map<Diff, List<DiffRegistryEntry>> entries = new LinkedHashMap<>();
 
-        private DiffRegistry(String sourceDir, long timestamp, String hashAlgorithm) {
+        private DiffRegistry(Path sourceDir, long timestamp, String hashAlgorithm) {
             this.sourceDir = sourceDir;
             this.hashAlgorithm = hashAlgorithm;
             this.timestamp = timestamp;
@@ -163,7 +164,7 @@ public class DiffRegistryBuilder {
             return res;
         }
 
-        public String getSourceDir() {
+        public Path getSourceDir() {
             return sourceDir;
         }
 

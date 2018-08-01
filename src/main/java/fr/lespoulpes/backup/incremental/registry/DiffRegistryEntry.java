@@ -1,15 +1,15 @@
 package fr.lespoulpes.backup.incremental.registry;
 
-import java.util.Comparator;
-
+import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.Diff;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
-import fr.lespoulpes.backup.incremental.registry.DiffRegistryBuilder.Diff;
+import java.nio.file.Path;
+import java.util.Comparator;
 
 public class DiffRegistryEntry extends RegistryEntry {
 	private final Diff diff;
 
-	public DiffRegistryEntry(Diff diff, String hash, String path, long size) {
+    public DiffRegistryEntry(Diff diff, String hash, Path path, long size) {
 		super(hash, path, size);
 		this.diff = diff;
 	}

@@ -1,23 +1,15 @@
 package fr.lespoulpes.backup.incremental.registry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
+import fr.lespoulpes.backup.incremental.tree.Node;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import fr.lespoulpes.backup.incremental.tree.Node;
+import java.nio.file.Path;
+import java.util.*;
 
 public class RegistryBuilder {
-	private String sourceDir;
+	private Path sourceDir;
 	private long timestamp;
 	private String hashAlgorithm;
 	private Node node;
@@ -38,7 +30,7 @@ public class RegistryBuilder {
 		return this;
 	}
 
-	public RegistryBuilder sourceDir(String sourceDir) {
+	public RegistryBuilder sourceDir(Path sourceDir) {
 		this.sourceDir = sourceDir;
 		return this;
 	}
@@ -70,25 +62,25 @@ public class RegistryBuilder {
 		}
 	}
 
-	public static class Registry implements IRegistry<String, RegistryEntry> {
-		public static final Registry EMPTY = new Registry("", 0, "NoAlgorithm");
+	public static class Registry implements IRegistry<Path, RegistryEntry> {
+		public static final Registry EMPTY = new Registry(null, 0, "NoAlgorithm");
 
 		public static RegistryBuilder builder() {
 			return new RegistryBuilder();
 		}
 
-		private final String sourceDir;
+		private final Path sourceDir;
 		private final long timestamp;
 		private final String hashAlgorithm;
-		private final Map<String, RegistryEntry> entries = new TreeMap<>();
+		private final Map<Path, RegistryEntry> entries = new TreeMap<>();
 
-		public Registry(String sourceDir, long timestamp, String hashAlgorithm) {
+		public Registry(Path sourceDir, long timestamp, String hashAlgorithm) {
 			this.sourceDir = sourceDir;
 			this.timestamp = timestamp;
 			this.hashAlgorithm = hashAlgorithm;
 		}
 
-		public String getSourceDir() {
+		public Path getSourceDir() {
 			return sourceDir;
 		}
 
@@ -98,19 +90,18 @@ public class RegistryBuilder {
 		}
 
 		private void add(Node node) {
-			String absolutePath = StringUtils.remove(node.getNode().getAbsolutePath(), this.sourceDir);
-			this.add(new RegistryEntry(node.getHash(), FilenameUtils.separatorsToUnix(absolutePath), node.getSize()));
+			this.add(new RegistryEntry(node.getHash(), node.getNode(), node.getSize()));
 		}
 
 		protected void add(RegistryEntry entry) {
 			this.entries.put(entry.getPath(), entry);
 		}
 
-		public Set<String> getKeys() {
+		public Set<Path> getKeys() {
 			return new TreeSet<>(this.entries.keySet());
 		}
 
-		public RegistryEntry get(String key) {
+		public RegistryEntry get(Path key) {
 			return this.entries.get(key);
 		}
 

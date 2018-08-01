@@ -1,15 +1,16 @@
 package fr.lespoulpes.backup.incremental.registry;
 
-import java.util.Comparator;
-
 import org.apache.commons.lang3.builder.CompareToBuilder;
+
+import java.nio.file.Path;
+import java.util.Comparator;
 
 public class RegistryEntry {
 	private final String hash;
-	private final String path;
+    private final Path path;
 	private final long size;
 
-	public RegistryEntry(String hash, String path, long size) {
+    public RegistryEntry(String hash, Path path, long size) {
 		this.hash = hash;
 		this.path = path;
 		this.size = size;
@@ -23,7 +24,7 @@ public class RegistryEntry {
 		return hash;
 	}
 
-	public String getPath() {
+    public Path getPath() {
 		return path;
 	}
 
@@ -55,12 +56,9 @@ public class RegistryEntry {
 		} else if (!hash.equals(other.hash))
 			return false;
 		if (path == null) {
-			if (other.path != null)
-				return false;
-		} else if (!path.equals(other.path))
-			return false;
-		return true;
-	}
+            return other.path == null;
+        } else return path.equals(other.path);
+    }
 
 	public static final class RegistryEntryComparator implements Comparator<RegistryEntry> {
 

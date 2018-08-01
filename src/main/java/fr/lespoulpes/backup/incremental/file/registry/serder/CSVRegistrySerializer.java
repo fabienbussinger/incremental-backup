@@ -1,14 +1,11 @@
 package fr.lespoulpes.backup.incremental.file.registry.serder;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import fr.lespoulpes.backup.incremental.registry.RegistryBuilder.Registry;
 import fr.lespoulpes.backup.incremental.file.serder.Serializer;
+import fr.lespoulpes.backup.incremental.registry.RegistryBuilder.Registry;
 import fr.lespoulpes.backup.incremental.registry.RegistryEntry;
+
+import java.io.*;
+import java.nio.file.Path;
 
 public class CSVRegistrySerializer implements Serializer<Registry> {
 	private final File file;
@@ -22,9 +19,9 @@ public class CSVRegistrySerializer implements Serializer<Registry> {
 		try (final BufferedWriter bw = new BufferedWriter(new FileWriter(this.file))) {
 			bw.write(String.format("%s;%s;%s", registry.getSourceDir(), registry.getTimestamp(), registry.getHashAlgorithm()));
 			bw.newLine();
-			for (String path : registry.getKeys()) {
+			for (Path path : registry.getKeys()) {
 				RegistryEntry entry = registry.get(path);
-				bw.write(line(entry));
+				bw.write(line(registry, entry));
 				bw.newLine();
 			}
 		} catch (FileNotFoundException e) {
@@ -36,7 +33,7 @@ public class CSVRegistrySerializer implements Serializer<Registry> {
 		}
 	}
 
-	private String line(RegistryEntry re) {
-		return String.format("%s;%s;%s", re.getHash(), re.getPath(), re.getSize());
+	private String line(Registry registry, RegistryEntry re) {
+		return String.format("%s;%s;%s", re.getHash(), registry.getSourceDir().relativize(re.getPath()).normalize(), re.getSize());
 	}
 }

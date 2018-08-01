@@ -30,7 +30,7 @@ public class Backup implements IncrementalExecution {
     }
 
     private static void tracePath(Node root) {
-        LOG.debug("{} \t\t\t\t{}", root.getNode().getAbsolutePath(), root.getHash());
+        LOG.debug("{} \t\t\t\t{}", root.getNode(), root.getHash());
         root.getChildren().forEach(Backup::tracePath);
     }
 
@@ -53,7 +53,7 @@ public class Backup implements IncrementalExecution {
         }
         long start = System.currentTimeMillis();
         final String hashAlgorithm = cmd.getOptionValue("hashAlgorithm");
-        FileFilter fileFilter = new FileFilter(Arrays.stream(StringUtils.split(exclusions, ",")).map(StringUtils::trimToEmpty).collect(Collectors.toSet()));
+        FileFilter fileFilter = new FileFilter(Arrays.stream(Optional.ofNullable(StringUtils.split(exclusions, ",")).orElse(new String[0])).map(StringUtils::trimToEmpty).collect(Collectors.toSet()));
         FileSeeker fs = new FileSeekerFJP(source, hashAlgorithm, fileFilter);
         Node root = fs.read();
         long end = System.currentTimeMillis();
@@ -61,7 +61,7 @@ public class Backup implements IncrementalExecution {
         LOG.info("Time spent seeking : {} ms", () -> (end - start));
         LOG.info("Total size : {}", () -> traceTotalSize(root));
 
-        Registry current = Registry.builder().sourceDir(source.getAbsolutePath()).timestamp(System.currentTimeMillis())
+        Registry current = Registry.builder().sourceDir(source.toPath()).timestamp(System.currentTimeMillis())
                 .hashAlgorithm(hashAlgorithm).node(root).build();
 
         // find latest registry in destination folder
